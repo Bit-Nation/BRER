@@ -1,0 +1,78 @@
+
+<script language="JavaScript" type="text/javascript">
+
+function genContract(params){
+    vName = document.getElementById("field_1").value;
+    vMail = document.getElementById("field_2").value;
+    vNumber = document.getElementById("field_3").value;
+    vFam1 = document.getElementById("field_4").value;
+    vFam2 = document.getElementById("field_5").value;
+    vFam3 = document.getElementById("field_6").value;
+    vFam4 = document.getElementById("field_7").value;
+    wsReplace = '{"ID":[{"NAME":"' + vName + '","HEIGHT":"' + vMail +'","BORN":"' + vNumber + '","FAMILY-1":"' + vFam1 + '","FAMILY-2":"' + vFam2 + '","FAMILY-3":"' + vFam3 + '","FAMILY-4":"' + vFam4 + '"}]}'
+    var outJSON = wsReplace.replace(/  /g, '_');
+    doSign(outJSON)
+    }
+var qrcode
+function doSign(outJSON) {
+  $.ajax({
+    url: '/ref/server.php',
+    type: 'POST',
+    data: {value: outJSON},
+    success: function(data){
+      data = JSON.parse(data);
+      $('#cOut').val(data.code);
+      var data2 = JSON.parse(data.hz_id);
+      var hzdata='transaction id '+data2.transaction+'\nhash: '+data.hash;
+      $('#cOutHZ').val(hzdata);
+      if (!qrcode) qrcode = new QRCode(document.getElementById("qrcode"), data.code);
+      qrcode.makeCode(data.code)
+
+    }
+  })
+}
+
+function doVerify() {
+  var f1 = document.form1;
+  var pubkey = f1.pubkey1.value;
+  var curve = f1.curve1.value;
+  var sigalg = f1.sigalg1.value;
+  var msg1 = f1.msg1.value;
+  var sigval = f1.sigval1.value;
+
+  var sig = new KJUR.crypto.Signature({"alg": sigalg, "prov": "cryptojs/jsrsa"});
+  sig.initVerifyByPublicKey({'ecpubhex': pubkey, 'eccurvename': curve});
+  sig.updateString(msg1);
+  var result = sig.verify(sigval);
+  if (result) {
+    alert("valid ECDSA signature");
+  } else {
+    alert("invalid ECDSA signature");
+  }
+}
+
+
+</script>
+
+<p />1. NAME<p /><input type="text" id="field_1" placeholder="FIRST MIDDLE LAST" style="width: 80%;"></input>
+<p />2. HEIGHT<p /><input type="text" name="field_2" id="field_2"  placeholder="165 cm/inches" style="width: 80%;"></input>
+<p />3. DATE OF BIRTH YYYYMMDD<p /><input type="number" name="field_3" id="field_3" size="8" placeholder="19891231" style="width: 80%;"></input>
+<p />
+<p />4. FAMILY MEMBER 1 (opt)<p /><input type="text" id="field_4" placeholder="FIRST MIDDLE LAST" style="width: 80%;"></input>
+<p />5. FAMILY MEMBER 2 (opt)<p /><input type="text" id="field_5" placeholder="FIRST MIDDLE LAST" style="width: 80%;"></input>
+<p />6. FAMILY MEMBER 3 (opt)<p /><input type="text" id="field_6" placeholder="FIRST MIDDLE LAST" style="width: 80%;"></input>
+<p />7. FAMILY MEMBER 4 (opt)<p /><input type="text" id="field_7" placeholder="FIRST MIDDLE LAST" style="width: 80%;"></input>
+
+<p /><button type="submit" style="background: #4099ff!important;color: #fff;border-color: #4099ff!important;
+    margin-bottom: 10px;font-size: 14px;font-weight: bold;padding: 15px 25px;border: 2px solid; display: inline-block;" onclick="genContract();">Press to Generate</button>
+
+<br>
+<h3>Certificate</h3>
+<textarea name="out"  id="cOut" placeholder="" style="max-width: 80%"size="10" rows="10" cols="100" readonly></textarea>
+<h3>QR Code</h3>
+<div id="qrcode">
+</div>
+<h3>Horizon Blockchain Id</h3>
+<textarea name="out"  id="cOutHZ" placeholder="" style="max-width: 80%"size="10" rows="10" cols="100" readonly></textarea>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script language="JavaScript" type="text/javascript" src="/ref/qrcode.js"></script>

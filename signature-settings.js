@@ -1,0 +1,2 @@
+var sigpublickey = "";
+var sigprvkey = "";
